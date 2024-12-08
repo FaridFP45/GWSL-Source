@@ -1,0 +1,103 @@
+import pygame
+import random
+
+# Inicializar o Pygame
+pygame.init()
+
+# Definir as dimensões da tela
+LARGURA = 800
+ALTURA = 600
+tela = pygame.display.set_mode((LARGURA, ALTURA))
+pygame.display.set_caption("Jogo 2D Simples")
+
+# Cores
+BRANCO = (255, 255, 255)
+PRETO = (0, 0, 0)
+VERDE = (0, 255, 0)
+VERMELHO = (255, 0, 0)
+
+# Definir a classe Jogador
+class Jogador:
+    def __init__(self):
+        self.x = LARGURA // 2
+        self.y = ALTURA - 50
+        self.largura = 50
+        self.altura = 50
+        self.velocidade = 5
+
+    def desenhar(self, tela):
+        pygame.draw.rect(tela, VERDE, (self.x, self.y, self.largura, self.altura))
+
+    def mover(self, tecla):
+        if tecla[pygame.K_LEFT] and self.x > 0:
+            self.x -= self.velocidade
+        if tecla[pygame.K_RIGHT] and self.x < LARGURA - self.largura:
+            self.x += self.velocidade
+        if tecla[pygame.K_UP] and self.y > 0:
+            self.y -= self.velocidade
+        if tecla[pygame.K_DOWN] and self.y < ALTURA - self.altura:
+            self.y += self.velocidade
+
+# Função para gerar obstáculos
+def gerar_obstaculos():
+    largura_obstaculo = random.randint(50, 100)
+    altura_obstaculo = random.randint(50, 100)
+    x_obstaculo = random.randint(0, LARGURA - largura_obstaculo)
+    y_obstaculo = random.randint(-200, -50)
+    return pygame.Rect(x_obstaculo, y_obstaculo, largura_obstaculo, altura_obstaculo)
+
+# Função principal do jogo
+def main():
+    jogador = Jogador()
+    obstaculos = []
+    pontuacao = 0
+    relogio = pygame.time.Clock()
+    rodando = True
+
+    while rodando:
+        tela.fill(BRANCO)
+
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                rodando = False
+
+        # Mover o jogador
+        teclas = pygame.key.get_pressed()
+        jogador.mover(teclas)
+
+        # Gerar novos obstáculos
+        if random.randint(1, 100) <= 2:
+            obstaculos.append(gerar_obstaculos())
+
+        # Mover e desenhar obstáculos
+        for obstaculo in obstaculos:
+            obstaculo.y += 5
+            if obstaculo.y > ALTURA:
+                obstaculos.remove(obstaculo)
+                pontuacao += 1
+
+            pygame.draw.rect(tela, VERMELHO, obstaculo)
+
+            # Verificar colisão com o jogador
+            if jogador.x < obstaculo.x + obstaculo.width and jogador.x + jogador.largura > obstaculo.x:
+                if jogador.y < obstaculo.y + obstaculo.height and jogador.y + jogador.altura > obstaculo.y:
+                    rodando = False
+
+        # Desenhar o jogador
+        jogador.desenhar(tela)
+
+        # Exibir a pontuação
+        fonte = pygame.font.SysFont(None, 36)
+        texto = fonte.render(f"Pontuação: {pontuacao}", True, PRETO)
+        tela.blit(texto, (10, 10))
+
+        pygame.display.update()
+
+        # Definir a taxa de quadros por segundo
+        relogio.tick(60)
+
+    pygame.quit()
+
+# Iniciar o jogo
+if __name__ == "__main__":
+    main()
